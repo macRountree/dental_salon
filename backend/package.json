@@ -1,0 +1,19 @@
+{
+  "name": "dental_salon_backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend para Dental_salon MEVN",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "author": "Macoy Rountree",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
