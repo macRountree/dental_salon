@@ -19,6 +19,7 @@ const createService = async (req, res) => {
 const getServices = async (req, res) => {
   try {
     const services = await Services.find();
+    res.json(services);
   } catch (error) {
     console.log(error);
   }
