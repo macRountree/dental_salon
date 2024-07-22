@@ -10,5 +10,9 @@ function handleNotFoundError(msg, res) {
   const error = new Error(msg);
   return res.status(404).json({msg: error.message});
 }
+//*Token by Date (not install dependencies)
 
-export {validateObjectId, handleNotFoundError};
+const uniqueId =
+  Date.now().toString(32) + Math.random().toString(32).substring(2);
+
+export {validateObjectId, handleNotFoundError, uniqueId};
