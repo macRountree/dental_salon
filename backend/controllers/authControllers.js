@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import {sendEmailVerification} from '../email/authEmailService.js';
-
+import {generateJWT} from '../helpers/index.js';
 /*
 {
 Validation
@@ -86,17 +86,29 @@ const login = async (req, res) => {
   //* Check User Confirms Account
 
   if (!user.verified) {
-    const errorToken = new Error('User not Verified');
+    const errorToken = new Error(
+      'User not Verified. Please check your E-mail to Verify it.'
+    );
     return res.status(401).json({msg: errorToken.message});
   }
   //* Confir Password
 
   if (await user.checkPassword(password)) {
-    res.json({msg: 'User Auth'});
+    //*Call JTW and generate TOKEN with _id
+    const token = generateJWT(user._id);
+    res.json({token});
   } else {
     const errorPassword = new Error('Password incorrect');
     return res.status(401).json({msg: errorPassword.message});
   }
 };
 
-export {register, verifyAccountToken, login};
+const userAuth = async (req, res) => {
+  //*We have the token  with req.user decoded from middleware ... next() method of middleware send the require right here
+  console.log('From user authController', req.user);
+
+  const {user} = req;
+  res.json({user});
+};
+
+export {register, verifyAccountToken, login, userAuth};

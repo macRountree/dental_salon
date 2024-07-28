@@ -21,7 +21,7 @@ const userSchema = mongoose.Schema({
   },
   token: {
     type: String,
-    default: () => uniqueId,
+    default: () => uniqueId(),
   },
   verified: {
     type: Boolean,

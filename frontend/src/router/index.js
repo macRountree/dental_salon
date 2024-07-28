@@ -1,7 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import AppoinmentLayout from '../components/appoinments/AppointmentLayout.vue';
-
+import AuthAPI from '@/api/AuthAPI';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -14,7 +14,14 @@ const router = createRouter({
       path: '/appointments',
       name: 'appointments',
       component: AppoinmentLayout,
+      meta: {requiresAuth: true},
       children: [
+        {
+          path: '',
+          name: 'my-appointments',
+          component: () =>
+            import('../components/appoinments/MyAppointmentsView.vue'),
+        },
         {
           path: 'new',
           component: () =>
@@ -63,4 +70,18 @@ const router = createRouter({
   ],
 });
 
+//* Validate all info before shows up
+router.beforeEach(async (to, from, next) => {
+  const requiresAuth = to.matched.some(url => url.meta.requiresAuth);
+  if (requiresAuth) {
+    try {
+      await AuthAPI.auth();
+      next();
+    } catch (error) {
+      next({name: 'login'});
+    }
+  } else {
+    next();
+  }
+});
 export default router;
