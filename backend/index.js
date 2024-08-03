@@ -4,7 +4,9 @@ import colors from 'colors';
 import cors from 'cors';
 import {db} from './config/db.js';
 import servicesRoutes from './routes/servicesRoutes.js';
+import appointmentsRoutes from './routes/appointmentsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import {getServices} from './controllers/servicesControllers.js';
 //* App config
 
@@ -43,6 +45,8 @@ app.use(cors(corsOptions));
 //* use() is middleware (code that executes at HTTP request)
 app.use('/api/services', servicesRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/users', userRoutes);
 
 //* port
 //*if we host the app, hoisting injects his own PORT

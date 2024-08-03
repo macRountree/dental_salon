@@ -1,9 +1,8 @@
 <script setup>
-import {RouterLink, RouterView} from 'vue-router';
-
 import {useUserAuthStore} from '../../stores/userAuth.js';
 
 const userName = useUserAuthStore();
+// console.log(userName.getUserName);
 </script>
 <template>
   <div class="flex justify-between">

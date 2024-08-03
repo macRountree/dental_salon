@@ -61,15 +61,20 @@ const disableDate = date => {
             v-model="store.date"
           />
         </div>
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-5 mt-10 lg:mt-0">
+        <div
+          v-if="store.isDateSelected"
+          class="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-5 mt-10 lg:mt-0"
+        >
           <button
             v-for="hour in store.hours"
-            class="block text-blue-500 font-black rounded-lg text-xl p-3"
+            class="block text-blue-500 font-black rounded-lg text-xl p-3 disabled:opacity-50"
             :class="
               store.time === hour ? 'bg-blue-500 text-white' : ' bg-white'
             "
             @click="store.time = hour"
+            :disabled="store.disableScheduletime(hour) ? true : false"
           >
+            <!-- Disable the button if the time is not available -->
             {{ hour }}
           </button>
         </div>
@@ -79,7 +84,7 @@ const disableDate = date => {
       <button
         type="button"
         class="w-full md:w-auto bg-blue-500 p-2 ring-1 ring-inset ring-blue-700 hover:ring-blue-300 text-white font-black uppercase rounded-lg"
-        @click="store.createAppointment"
+        @click="store.saveAppointment"
       >
         Confirm Reservation
       </button>

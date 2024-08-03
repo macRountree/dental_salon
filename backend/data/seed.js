@@ -22,7 +22,7 @@ async function clearDB() {
     process.exit();
   } catch (error) {
     console.log(colors.red.bold(`Error: ${error.message}`));
-    pro;
+    process.exit(1);
   }
 }
 //* need script to executed this functions by package.json

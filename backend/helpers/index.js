@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import {format} from 'date-fns';
+
 function validateObjectId(id, res) {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error('invalid ID');
@@ -23,4 +25,14 @@ const generateJWT = id => {
   return token;
 };
 
-export {validateObjectId, handleNotFoundError, uniqueId, generateJWT};
+function formateDate(date) {
+  return format(date, 'PPPP');
+}
+
+export {
+  validateObjectId,
+  handleNotFoundError,
+  uniqueId,
+  generateJWT,
+  formateDate,
+};

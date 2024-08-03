@@ -17,7 +17,7 @@ export async function sendEmailVerification({name, email, token}) {
     //* inject all elements inside html
     html: ` <p>Hi: ${name} Confirm your account in DentalCompany </p>
      <p>Your Account is almost ready, just need to confirm in the next link</p>
-     <a href="${process.env.FRONTEND_URL}auth/verify/${token}">Confirm Account</a>
+     <a href="${process.env.FRONTEND_URL}/auth/confirm-account/${token}">Confirm Account</a>
      <p>If you not create this account, you should ignore this message</p>
     
     `,

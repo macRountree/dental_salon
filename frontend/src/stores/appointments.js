@@ -1,12 +1,22 @@
+import {computed, onMounted, ref, watch} from 'vue';
 import {defineStore} from 'pinia';
-import {computed, onMounted, ref} from 'vue';
+import {useRouter} from 'vue-router';
+import AppointmentAPI from '@/api/AppointmentAPI';
+import {convertToIso, convertToYYYYMMDD} from '@/helpers/dates';
+import {inject} from 'vue';
+import {useUserAuthStore} from './userAuth';
 export const useAppointmentsStore = defineStore('appointments', () => {
+  const appointmentId = ref('');
+  const toast = inject('toast');
   const services = ref([]);
   const date = ref('');
 
   const hours = ref([]);
 
   const time = ref('');
+  const appointmentsByDate = ref([]);
+  const router = useRouter();
+  const userStore = useUserAuthStore();
 
   onMounted(() => {
     const startHour = 10;
@@ -15,6 +25,42 @@ export const useAppointmentsStore = defineStore('appointments', () => {
       hours.value.push(`${hour}:00`);
     }
   });
+
+  watch(date, async () => {
+    time.value = '';
+    if (date.value === '') return;
+    const {data} = await AppointmentAPI.getByDate(date.value);
+    appointmentsByDate.value = data;
+
+    if (appointmentId.value) {
+      appointmentsByDate.value = data.filter(
+        appointmentIdDate => appointmentIdDate._id !== appointmentId.value
+      );
+
+      time.value = data.filter(
+        appointmentIdDate =>
+          appointmentIdDate._id === appointmentId.value[0].time
+      );
+    } else {
+      appointmentsByDate.value = data;
+    }
+  });
+
+  function setSelectedAppointment(appointment) {
+    //*Brings services selected when push Edit button
+    services.value = appointment.services;
+
+    //*need convert the dates  in new Format()
+
+    date.value = convertToYYYYMMDD(appointment.date);
+
+    //*
+    time.value = appointment.time;
+
+    appointmentId.value = appointment._id;
+    console.log(appointmentId.value, 'ID en setSeelectedAppointemn');
+  }
+
   //*handle service Selected {avoid duplicate services, and diselected}
   function onServiceSelected(service) {
     if (
@@ -27,7 +73,11 @@ export const useAppointmentsStore = defineStore('appointments', () => {
       );
     } else {
       if (services.value.length === 2) {
-        alert('Choose only 2 services per day');
+        toast.open({
+          message: 'Choose only 2 services per day',
+          type: 'warning',
+          duration: 5000,
+        });
         return;
       }
 
@@ -35,21 +85,85 @@ export const useAppointmentsStore = defineStore('appointments', () => {
     }
   }
 
-  function createAppointment() {
+  async function saveAppointment() {
     /*Create object with Appointment details */
 
     const appointmentObj = {
-      services: services.value,
-      date: date.value,
+      services: services.value.map(service => service._id),
+      date: convertToIso(date.value),
       time: time.value,
-      total: totalAmount,
+      totalAmount: totalAmount.value,
     };
-    console.log(appointmentObj, 'Res Created');
+
+    if (appointmentId.value) {
+      try {
+        //*call App API
+        const {data} = await AppointmentAPI.update(
+          appointmentId.value,
+          appointmentObj
+        );
+        toast.open({
+          message: data.msg,
+          type: 'success',
+          duration: 5000,
+        });
+      } catch (error) {
+        console.log(error, 'No entro');
+      }
+    } else {
+      try {
+        //*call App API
+        const {data} = await AppointmentAPI.create(appointmentObj);
+        toast.open({
+          message: data.msg,
+          type: 'success',
+          duration: 5000,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    clearAppointmentData();
+    userStore.getUserAppointments();
+    router.push({name: 'my-appointments'});
   }
 
+  //*Clear appointmet Object after confirmation button
+
+  function clearAppointmentData() {
+    appointmentId.value = '';
+    services.value = [];
+    date.value = '';
+    time.value = '';
+  }
+
+  async function cancelAppointment(id) {
+    if (confirm('Would you delete this Appointment?')) {
+      try {
+        const {data} = await AppointmentAPI.delete(id);
+
+        toast.open({
+          message: data.msg,
+          type: 'success',
+          duration: 2000,
+        });
+        //*need userAPpoimntment for update the state
+        userStore.userAppointments = userStore.userAppointments.filter(
+          appointment => appointment._id !== id
+        );
+      } catch (error) {
+        toast.open({
+          message: error.response.data.msg,
+          type: 'error',
+          duration: 2000,
+        });
+      }
+    }
+
+    console.log(id);
+  }
   //*CONFIRM if a services is select or not
   const isServiceSelected = computed(() => {
-    console.log();
     return id => {
       return services.value.some(service => service._id === id);
     };
@@ -65,16 +179,34 @@ export const useAppointmentsStore = defineStore('appointments', () => {
     return services.value.length && date.value.length && time.value.length;
   });
 
+  const isDateSelected = computed(() => {
+    return date.value ? true : false;
+  });
+
+  //* BRings appointmentsByDate and return true or false if appointment.time === hour selected ... if true.. then disabled de duplicated hour
+  const disableScheduletime = computed(() => {
+    return hour => {
+      return appointmentsByDate.value.find(
+        appointment => appointment.time === hour
+      );
+    };
+  });
   return {
     services,
     date,
     hours,
     time,
-    createAppointment,
+    clearAppointmentData,
+    setSelectedAppointment,
+    appointmentsByDate,
+    saveAppointment,
     onServiceSelected,
+    cancelAppointment,
     isServiceSelected,
     noServicesSelected,
     totalAmount,
+    isDateSelected,
     isValidReservation,
+    disableScheduletime,
   };
 });
