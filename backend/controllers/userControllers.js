@@ -4,26 +4,22 @@ const getUserAppointments = async (req, res) => {
   //* Need pass the user ID (from mongo)
 
   const {user} = req.params;
-  console.log(user, 'user Params');
-  console.log(req.user, 'Req User controller');
-  const role = 'admin';
-  if (user !== req.user._id.toString() && role !== 'admin') {
+
+  if (user !== req.user._id.toString()) {
     const error = new Error('Access Denied');
     return res.status(400).json({msg: error.message});
   }
+
   try {
-    //*Bring all appointments from user id Selected     || logged
-
-    const userAppointments = await Appointment.find({
-      user,
-      date: {
-        $gte: new Date(),
-      },
-    })
+    const query = req.user.admin
+      ? {date: {$gte: new Date()}}
+      : {user, date: {$gte: new Date()}};
+    const appointments = await Appointment.find(query)
       .populate('services')
-      .sort({date: 'asc'}); //*extract service name
+      .populate({path: 'user', select: 'name email'})
+      .sort({date: 'asc'});
 
-    res.json(userAppointments);
+    res.json(appointments);
   } catch (error) {
     console.log(error);
   }

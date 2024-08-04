@@ -1,6 +1,9 @@
 import User from '../models/User.js';
-import {sendEmailVerification} from '../email/authEmailService.js';
-import {generateJWT} from '../helpers/index.js';
+import {
+  sendEmailPasswordReset,
+  sendEmailVerification,
+} from '../email/authEmailService.js';
+import {generateJWT, uniqueId} from '../helpers/index.js';
 /*
 {
 Validation
@@ -103,6 +106,64 @@ const login = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const {email} = req.body;
+
+  //*Verify if user exist
+  const user = await User.findOne({email});
+
+  if (!user) {
+    const errorPassword = new Error(`User with email: ${email} does not exist`);
+    return res.status(401).json({msg: errorPassword.message});
+  }
+  //*else user exist then generate Token
+  try {
+    user.token = uniqueId();
+
+    const result = await user.save();
+    await sendEmailPasswordReset({
+      name: result.name,
+      email: result.email,
+      token: result.token,
+    });
+    res.json({msg: 'Send Email'});
+  } catch (error) {
+    console.log(error);
+  }
+  console.log(email, 'from ForgotPassword');
+};
+
+const verifyPasswordResetToken = async (req, res) => {
+  const {token} = req.params;
+  console.log(token, `verifiypasswor ${token} `);
+  const isValidtoken = await User.findOne({token});
+  if (!isValidtoken) {
+    const errorToken = new Error('invalid Token');
+    return res.status(400).json({msg: errorToken.message});
+  }
+  res.json({msg: 'valid Token'});
+};
+const updatePassword = async (req, res) => {
+  const {token} = req.params;
+  console.log(token, `verifiypasswor ${token} `);
+  const user = await User.findOne({token});
+  console.log(user);
+  if (!user) {
+    const errorToken = new Error('invalid Token');
+    return res.status(400).json({msg: errorToken.message});
+  }
+  const {password} = req.body;
+  // // console.log(password);
+  try {
+    user.token = '';
+    user.password = password;
+    await user.save();
+    res.json({msg: 'Password modified Success'});
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const userAuth = async (req, res) => {
   //*We have the token  with req.user decoded from middleware ... next() method of middleware send the require right here
   console.log('From user authController', req.user);
@@ -110,5 +171,24 @@ const userAuth = async (req, res) => {
   const {user} = req;
   res.json({user});
 };
+const adminAuth = async (req, res) => {
+  const {user} = req;
+  //*If !user is admin  then restringed access
+  if (!user.admin) {
+    const errorAdmin = new Error('Not Valid Action');
+    return res.status(403).json({msg: errorAdmin.message});
+  }
 
-export {register, verifyAccountToken, login, userAuth};
+  res.json(user);
+};
+
+export {
+  register,
+  verifyAccountToken,
+  login,
+  userAuth,
+  adminAuth,
+  verifyPasswordResetToken,
+  updatePassword,
+  forgotPassword,
+};

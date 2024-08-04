@@ -1,5 +1,8 @@
 <script setup>
+import {useRoute} from 'vue-router';
+
 //*add nav with routes
+const route = useRoute();
 
 const authRoutes = [
   {
@@ -9,6 +12,10 @@ const authRoutes = [
   {
     name: 'login',
     text: 'Login',
+  },
+  {
+    name: 'forgot-password',
+    text: 'Forgot Password',
   },
 ];
 </script>
@@ -21,7 +28,8 @@ const authRoutes = [
     >
       <RouterLink
         v-for="authRoute in authRoutes"
-        class="uppercase font-bold text-white"
+        class="uppercase font-bold text-white hover:text-blue-500 border border-white hover:border-blue-500 px-5 py-2 rounded-lg"
+        :class="{hidden: authRoute.name === route.name}"
         :to="{name: authRoute.name}"
       >
         {{ authRoute.text }}
